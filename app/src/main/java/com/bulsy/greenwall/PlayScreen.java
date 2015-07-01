@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Represents the main screen of play for the game.
@@ -67,6 +68,8 @@ public class PlayScreen extends Screen {
     private volatile Fruit selectedFruit = null;
     private int maxShownSelectableFruit;
     private long frtime = 0;
+    private int lastSeedCount = 0;          // seedsQueued‚Ì’¼‘O—v‘f”
+    private float randomSpeed = 1.0f;            // ‘¬“x‚Ì”{—¦
     private long possspawntime = 0;
     private Rect scaledDst = new Rect();
     private MainActivity act = null;
@@ -430,7 +433,24 @@ public class PlayScreen extends Screen {
     @Override
     public void update(View v) {
         long newtime = System.nanoTime();
-        float elapsedsecs = (float) (newtime - frtime) / ONESEC_NANOS;
+        // ŠÉ‹}‚ğ‚Â‚¯‚é
+        // ‹[——”
+        if (lastSeedCount != fruitsSplatted.size()){
+            Random random = new Random();
+            int randomIndex = random.nextInt(2) + 1;
+            if (randomIndex % 2 == 0){
+                // ãŒÀ‚ğŒ»ó‚Ì+0.5”ÍˆÍ‚Å‚ ‚°‚Ä‚¢‚­
+                // 1~5‚Ì”ÍˆÍ‚ğì¬‚µ‚Ä1/10‚É‚·‚é
+                randomSpeed += (random.nextInt(4) + 1) / 10.0f;
+                float decimalSpeed = random.nextFloat();    // 0.1~1.0
+//                randomSpeed = random.nextInt(4) + decimalSpeed + 1;    // 1~5
+                System.out.println(randomSpeed);
+            }
+            lastSeedCount = fruitsSplatted.size();  // ‰Ê•¨‚Ì•\¦ŒÂ”
+        }
+        String speedStr = String.format("SPEED:%f", randomSpeed);
+        System.out.println(speedStr);
+        float elapsedsecs = (float) (newtime - frtime) / ONESEC_NANOS * randomSpeed;
         frtime = newtime;
         fps = (int) (1 / elapsedsecs);
 
@@ -789,6 +809,8 @@ public class PlayScreen extends Screen {
                 if (gamestate == State.ROUNDSUMMARY
                         || gamestate == State.STARTGAME
                         || gamestate == State.PLAYERDIED) {
+                    // Game‚Ì‰Šú‰»
+                    randomSpeed = 1;
                     gamestate = State.STARTROUND; // prep and start round
                     return false; // no followup msgs
                 }
