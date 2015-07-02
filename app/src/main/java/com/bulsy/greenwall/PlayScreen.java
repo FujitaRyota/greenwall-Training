@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
+import android.widget.Switch;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -68,8 +69,8 @@ public class PlayScreen extends Screen {
     private volatile Fruit selectedFruit = null;
     private int maxShownSelectableFruit;
     private long frtime = 0;
-    private int lastSeedCount = 0;          // seedsQueued‚Ì’¼‘O—v‘f”
-    private float randomSpeed = 1.0f;            // ‘¬“x‚Ì”{—¦
+    private int lastSeedCount = 0;          // seedsQueuedï¿½Ì’ï¿½ï¿½Oï¿½vï¿½fï¿½ï¿½
+    private float randomSpeed = 1.0f;            // ï¿½ï¿½ï¿½xï¿½Ì”{ï¿½ï¿½
     private long possspawntime = 0;
     private Rect scaledDst = new Rect();
     private MainActivity act = null;
@@ -189,13 +190,13 @@ public class PlayScreen extends Screen {
             ketbtm[1] = act.getScaledBitmap("ketchsplat.png");
 
             // initialize types of fruit (seeds), point values
-            pearseed = new Seed(pearbtm, 10, Sound.WETSPLAT);
-            orangeseed = new Seed(orangebtm, 15, Sound.WETSPLAT);
-            banseed = new Seed(banbtm, 20, Sound.WETSPLAT);
-            milkseed = new Seed(milkbtm, 25, Sound.SPLAT);
-            icseed = new Seed(icbtm, 30, Sound.SPLAT);
-            nutseed = new Seed(nutbtm, 40, Sound.SPLAT);
-            ketseed = new Seed(ketbtm, 0, Sound.KSPLAT);
+            pearseed = new Seed(pearbtm, 10, Sound.WETSPLAT, SeedType.pearseed);
+            orangeseed = new Seed(orangebtm, 15, Sound.WETSPLAT, SeedType.orangeseed);
+            banseed = new Seed(banbtm, 20, Sound.WETSPLAT, SeedType.banseed);
+            milkseed = new Seed(milkbtm, 25, Sound.SPLAT, SeedType.milkseed);
+            icseed = new Seed(icbtm, 30, Sound.SPLAT, SeedType.icseed);
+            nutseed = new Seed(nutbtm, 40, Sound.SPLAT, SeedType.nutseed);
+            ketseed = new Seed(ketbtm, 0, Sound.KSPLAT, SeedType.ketseed);
 
             // init combos
             ArrayList<Seed> sl = new ArrayList<Seed>();
@@ -433,20 +434,20 @@ public class PlayScreen extends Screen {
     @Override
     public void update(View v) {
         long newtime = System.nanoTime();
-        // ŠÉ‹}‚ğ‚Â‚¯‚é
-        // ‹[——”
+        // ï¿½É‹}ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½
+        // ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (lastSeedCount != fruitsSplatted.size()){
             Random random = new Random();
             int randomIndex = random.nextInt(2) + 1;
             if (randomIndex % 2 == 0){
-                // ãŒÀ‚ğŒ»ó‚Ì+0.5”ÍˆÍ‚Å‚ ‚°‚Ä‚¢‚­
-                // 1~5‚Ì”ÍˆÍ‚ğì¬‚µ‚Ä1/10‚É‚·‚é
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+0.5ï¿½ÍˆÍ‚Å‚ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½
+                // 1~5ï¿½Ì”ÍˆÍ‚ï¿½ï¿½ì¬ï¿½ï¿½ï¿½ï¿½1/10ï¿½É‚ï¿½ï¿½ï¿½
                 randomSpeed += (random.nextInt(4) + 1) / 10.0f;
                 float decimalSpeed = random.nextFloat();    // 0.1~1.0
 //                randomSpeed = random.nextInt(4) + decimalSpeed + 1;    // 1~5
                 System.out.println(randomSpeed);
             }
-            lastSeedCount = fruitsSplatted.size();  // ‰Ê•¨‚Ì•\¦ŒÂ”
+            lastSeedCount = fruitsSplatted.size();  // ï¿½Ê•ï¿½ï¿½Ì•\ï¿½ï¿½ï¿½Âï¿½
         }
         String speedStr = String.format("SPEED:%f", randomSpeed);
         System.out.println(speedStr);
@@ -643,7 +644,8 @@ public class PlayScreen extends Screen {
                 while (fit.hasNext()) {
                     Fruit f = fit.next();
                     if (f != selectedFruit) {
-                        f.x += f.vx * elapsedsecs;
+//                        f.x += f.vx * elapsedsecs;
+                        f.x += f.vx * elapsedsecs * f.scroll;
 
                         // wobble displayable fruit up and down, and return them to regular line when let go
                         int targy = inity + (int)(Math.sin(f.x/15)* selectable_y_play);
@@ -809,7 +811,7 @@ public class PlayScreen extends Screen {
                 if (gamestate == State.ROUNDSUMMARY
                         || gamestate == State.STARTGAME
                         || gamestate == State.PLAYERDIED) {
-                    // Game‚Ì‰Šú‰»
+                    // Gameï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
                     randomSpeed = 1;
                     gamestate = State.STARTROUND; // prep and start round
                     return false; // no followup msgs
@@ -906,8 +908,26 @@ public class PlayScreen extends Screen {
 
     /**
      * A Seed is more or less a template for a Fruit.
-     */
+     *   private Seed pearseed;
+     *   private Seed orangeseed;
+     *   private Seed banseed;
+     *   private Seed milkseed;
+     *   private Seed icseed;
+     *   private Seed nutseed;
+     *   private Seed ketseed;
+     **/
+    enum SeedType {
+        nothing,
+        pearseed,
+        orangeseed,
+        banseed,
+        milkseed,
+        icseed,
+        nutseed,
+        ketseed,
+    }
     private class Seed {
+        SeedType itemType = SeedType.nothing;    // ã‚¢ã‚¤ãƒ†ãƒ ã®ç¨®åˆ¥ã¨å±æ€§ï¼ˆä¸Šä½ãƒ“ãƒƒãƒˆã¯å±æ€§ã€ä¸‹ä½ãƒ“ãƒƒãƒˆã¯ç¨®åˆ¥ï¼‰
         int points; // points this type of Fruit is worth, if it hits the wall.
         Sound splatsound;
         Bitmap btm[]; // bitmap for animating this type of throwable
@@ -917,7 +937,8 @@ public class PlayScreen extends Screen {
         float halfHeight = 0;
         final float HALF_DIVISOR = 1.9f;  // we fudge "half" a little, results are more comfortable.
 
-        public Seed(Bitmap bitmaps[], int points, Sound splatsound) {
+        public Seed(Bitmap bitmaps[], int points, Sound splatsound, SeedType seedType) {
+            this.itemType = seedType;
             this.btm = bitmaps;
             this.width = bitmaps[0].getWidth();
             this.height = bitmaps[0].getHeight();
@@ -947,6 +968,7 @@ public class PlayScreen extends Screen {
         float vx=0;
         float vy=0;
         float vz=0;
+        float scroll = 1.9f;    // ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é€Ÿåº¦
 
         long thrownTime = 0; // when this fruit was thrown; 0 = not yet
         Seed seed=null; // the core information about this throwable fruit
@@ -970,6 +992,32 @@ public class PlayScreen extends Screen {
             this.z = initz;
             this.seed = s;
             isBurst = false;
+
+            switch(this.seed.itemType){
+                case pearseed:
+                    scroll = 0.6f;
+                    break;
+                case orangeseed:
+                    scroll = 1.1f;
+                    break;
+                case banseed:
+                    scroll = 1.2f;
+                    break;
+                case milkseed:
+                    scroll = 1.3f;
+                    break;
+                case icseed:
+                    scroll = 1.4f;
+                    break;
+                case nutseed:
+                    scroll = 1.5f;
+                    break;
+                case ketseed:
+                    scroll = 0.9f;
+                    break;
+                default:
+                    break;
+            }
         }
 
         /**
