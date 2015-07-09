@@ -115,7 +115,8 @@ public class PlayScreen extends Screen {
     private final int LEVEL_BANANA = 3;
     private final int LEVEL_MILK = 4;
     private final int LEVEL_KETCHUP = 5;
-    private final int LEVEL_DANCING_FRUIT = 6;
+//    private final int LEVEL_DANCING_FRUIT = 6;
+    private final int LEVEL_DANCING_FRUIT = 1;
     private final int LEVEL_ICECREAM = 8;
     private final int LEVEL_NUT = 10;
     private final int LEVEL_MOREFRUIT1 = 14;
@@ -330,7 +331,8 @@ public class PlayScreen extends Screen {
             addFruitSeed(seedsQueued, nutseed, round / 3);
 
         if (round >= LEVEL_DANCING_FRUIT)
-          selectable_y_play = 8+round/2;
+            //selectable_y_play = 8+round/2;
+            selectable_y_play = 800;
         else
           selectable_y_play = 0;
 
@@ -442,7 +444,7 @@ public class PlayScreen extends Screen {
             if (randomIndex % 2 == 0){
                 // ����������+0.5�͈͂ł����Ă���
                 // 1~5�͈̔͂��쐬����1/10�ɂ���
-                randomSpeed += (random.nextInt(4) + 1) / 10.0f;
+                randomSpeed += (random.nextInt(3) + 1) / 10.0f;
                 float decimalSpeed = random.nextFloat();    // 0.1~1.0
 //                randomSpeed = random.nextInt(4) + decimalSpeed + 1;    // 1~5
                 System.out.println(randomSpeed);
@@ -566,7 +568,13 @@ public class PlayScreen extends Screen {
                     fit.remove();
                     fruitsSplatted.add(f);
                     nWallSplats++;
-                    score += f.seed.points;
+
+                    if (f.isBonus == true){
+                        score += f.seed.points * 5;
+                    } else {
+                        score += f.seed.points;
+                    }
+
                     act.playSound(f.getSplatSound());
 
                     // check combo
@@ -592,7 +600,6 @@ public class PlayScreen extends Screen {
                             for (Fruit spf : comboFruits) {
                                 fruitsSplatted.remove(spf);
                             }
-
 
                             // display combo hit message "somewhere next to" combo hit
                             effpt = renderFromZ(f.x, f.y, f.z, wallxcenter, wallycenter);
@@ -648,7 +655,9 @@ public class PlayScreen extends Screen {
                         f.x += f.vx * elapsedsecs * f.scroll;
 
                         // wobble displayable fruit up and down, and return them to regular line when let go
-                        int targy = inity + (int)(Math.sin(f.x/15)* selectable_y_play);
+                        //int targy = inity + (int)(Math.sin(f.x/15)* selectable_y_play);
+                        //f.y += (targy - f.y) / SELECTABLE_FRUIT_BRAKING_FACTOR;
+                        int targy = inity + (int)(Math.sin(f.x/65)* selectable_y_play);
                         f.y += (targy - f.y) / SELECTABLE_FRUIT_BRAKING_FACTOR;
                     }
                     if (f.x < -f.seed.halfWidth || f.x > width + f.seed.halfWidth) {
@@ -937,6 +946,7 @@ public class PlayScreen extends Screen {
         float halfHeight = 0;
         final float HALF_DIVISOR = 1.9f;  // we fudge "half" a little, results are more comfortable.
 
+
         public Seed(Bitmap bitmaps[], int points, Sound splatsound, SeedType seedType) {
             this.itemType = seedType;
             this.btm = bitmaps;
@@ -968,13 +978,14 @@ public class PlayScreen extends Screen {
         float vx=0;
         float vy=0;
         float vz=0;
-        float scroll = 1.9f;    // スクロール速度
+        float scroll = 0.3f;    // スクロール速度
 
         long thrownTime = 0; // when this fruit was thrown; 0 = not yet
         Seed seed=null; // the core information about this throwable fruit
 
         Rect bounds = new Rect();
         boolean isBurst = false;
+        boolean isBonus = false;
 
         /**
          * initialize a fruit, at initial location.
@@ -993,27 +1004,55 @@ public class PlayScreen extends Screen {
             this.seed = s;
             isBurst = false;
 
+            if (Math.random() > 0.75){
+                isBonus = true;
+            } else {
+                isBonus = false;
+            }
+
             switch(this.seed.itemType){
                 case pearseed:
-                    scroll = 0.6f;
+                    if (isBonus == true){
+                        scroll = 0.8f;
+                    } else {
+                        scroll = 0.3f;
+                    }
                     break;
-                case orangeseed:
-                    scroll = 1.1f;
-                    break;
-                case banseed:
-                    scroll = 1.2f;
-                    break;
-                case milkseed:
-                    scroll = 1.3f;
-                    break;
-                case icseed:
-                    scroll = 1.4f;
-                    break;
-                case nutseed:
-                    scroll = 1.5f;
-                    break;
-                case ketseed:
+                case orangeseed:if (isBonus == true){
                     scroll = 0.9f;
+                } else {
+                    scroll = 0.4f;
+                }
+                    break;
+                case banseed:if (isBonus == true){
+                    scroll = 1.4f;
+                } else {
+                    scroll = 0.9f;
+                }
+                    break;
+                case milkseed:if (isBonus == true){
+                    scroll = 1.5f;
+                } else {
+                    scroll = 1.0f;
+                }
+                    break;
+                case icseed:if (isBonus == true){
+                    scroll = 1.6f;
+                } else {
+                    scroll = 1.1f;
+                }
+                    break;
+                case nutseed:if (isBonus == true){
+                    scroll = 1.7f;
+                } else {
+                    scroll = 1.2f;
+                }
+                    break;
+                case ketseed:if (isBonus == true){
+                    scroll = 2.0f;
+                } else {
+                    scroll = 1.3f;
+                }
                     break;
                 default:
                     break;
